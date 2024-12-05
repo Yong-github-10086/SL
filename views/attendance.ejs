@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <%- include('partials/head.ejs') %>
+<body>
+    <%- include('partials/nav') %>
+
+    <div class="container mt-4">
+        <h2 class="text-center">Take Attendance</h2>
+
+        <!-- Attendance Date and Semester Selection Form -->
+        <form id="attendanceForm" action="/attendance" method="POST" class="mx-auto" style="max-width: 600px;">
+            
+            <!-- Year Selection -->
+            <div class="mb-3">
+                <label for="year" class="form-label">Year</label>
+                <select class="form-select" id="year" name="year" required>
+                    <% for (let year = 2022; year <= 2032; year++) { %>
+                        <option value="<%= year %>"><%= year %></option>
+                    <% } %>
+                </select>
+            </div>
+
+            <!-- Month Selection -->
+            <div class="mb-3">
+                <label for="month" class="form-label">Month</label>
+                <select class="form-select" id="month" name="month" required>
+                    <option value="January">January</option>
+                    <option value="February">February</option>
+                    <option value="March">March</option>
+                    <option value="April">April</option>
+                    <option value="May">May</option>
+                    <option value="June">June</option>
+                    <option value="July">July</option>
+                    <option value="August">August</option>
+                    <option value="September">September</option>
+                    <option value="October">October</option>
+                    <option value="November">November</option>
+                    <option value="December">December</option>
+                </select>
+            </div>
+
+            <!-- Day Selection -->
+            <div class="mb-3">
+                <label for="day" class="form-label">Day</label>
+                <select class="form-select" id="day" name="day" required>
+                    <% for (let day = 1; day <= 31; day++) { %>
+                        <option value="<%= day %>"><%= day %></option>
+                    <% } %>
+                </select>
+            </div>
+
+            <!-- Semester Selection -->
+            <div class="mb-3">
+                <label for="semester" class="form-label">Semester</label>
+                <select class="form-select" id="semester" name="semester" required>
+                    <option value="Spring">Spring</option>
+                    <option value="Summer">Summer</option>
+                    <option value="Fall">Fall</option>
+                    
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Confirm Date</button>
+        </form>
+
+        <!-- Form for taking attendance for students after date is confirmed -->
+        <% if (students && students.length > 0) { %>
+        <form id="studentAttendanceForm" action="/take-attendance" method="POST" class="mx-auto mt-4" style="max-width: 600px;">
+            <input type="hidden" name="year" value="<%= year %>" />
+            <input type="hidden" name="month" value="<%= month %>" />
+            <input type="hidden" name="day" value="<%= day %>" />
+            <input type="hidden" name="semester" value="<%= semester %>" />
+
+            <!-- Student Selection -->
+            <div class="mb-3">
+                <label for="studentId" class="form-label">Select Student</label>
+                <select class="form-select" id="studentId" name="studentId" required>
+                    <% students.forEach(student => { %>
+                        <option value="<%= student.id %>"><%= student.firstName %> <%= student.lastName %> - <%= student.phone %></option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Take Attendance</button>
+        </form>
+        <% } else if (students && students.length === 0) { %>
+            <p>No students enrolled for the selected semester.</p>
+        <% } %>
+
+        <% if (message) { %>
+            <div class="alert alert-success mt-3"><%= message %></div>
+        <% } else if (error) { %>
+            <div class="alert alert-danger mt-3"><%= error %></div>
+        <% } %>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

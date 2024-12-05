@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head.ejs') %>
+<body>
+
+    <%- include('partials/nav') %>
+
+    <div class="container mt-4">
+        <h2 class="text-center">Enroll Student</h2>
+
+        <form id="studentSelectForm" class="mb-4">
+            <div class="mb-3">
+                <label for="searchName" class="form-label">Select Student by Name</label>
+                <input type="text" class="form-control" id="searchName" name="searchName" autocomplete="off" required>
+                <ul id="suggestions" class="list-group mt-2" style="display:none;"></ul>
+            </div>
+            <button type="button" id="confirmSelect" class="btn btn-primary">Confirm Selection</button>
+        </form>
+
+        <form id="enrollForm" action="/enroll" method="POST" style="max-width: 600px; display: none;">
+            <input type="hidden" id="studentId" name="studentId" value="">
+
+            <div class="mb-3">
+                <label for="year" class="form-label">School Year</label>
+                <input type="text" class="form-control" id="year" name="year" required placeholder="YYYY">
+            </div>
+            <div class="mb-3">
+                <label for="semester" class="form-label">Semester</label>
+                <select class="form-select" id="semester" name="semester" required>
+                    <option value="">Select Semester</option>
+                    <option value="Fall">Fall</option>
+                    <option value="Spring">Spring</option>
+                    <option value="Summer">Summer</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Enroll</button>
+        </form>
+
+        <% if (message) { %>
+            <div class="alert alert-success mt-3"><%= message %></div>
+        <% } else if (error) { %>
+            <div class="alert alert-danger mt-3"><%= error %></div>
+        <% } %>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#searchName').on('input', function() {
+                const searchTerm = $(this).val();
+                if (searchTerm.length > 1) {
+                    $.ajax({
+                        url: '/get-students',
+                        method: 'GET',
+                        success: function(data) {
+                            const students = data[0];
+                            const filteredStudents = students.filter(student =>
+                                `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+                            );
+
+                            const suggestions = filteredStudents.map(student => 
+                                `<li class="list-group-item" data-id="${student.id}">${student.firstName} ${student.lastName} - ${student.phone}</li>`
+                            );
+                            $('#suggestions').html(suggestions.join('')).show();
+                        }
+                    });
+                } else {
+                    $('#suggestions').hide();
+                }
+            });
+
+            $(document).on('click', '.list-group-item', function() {
+                const studentId = $(this).data('id');
+                const studentName = $(this).text();
+                $('#searchName').val(studentName);
+                $('#studentId').val(studentId);
+                $('#suggestions').hide();
+            });
+
+            $('#confirmSelect').on('click', function() {
+                const studentId = $('#studentId').val();
+                if (studentId) {
+                    $('#enrollForm').show();
+                } else {
+                    alert('Please select a student.');
+                }
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

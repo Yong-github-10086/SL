@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head.ejs') %>
+    <title>Track Attendance</title>
+</head>
+<body>
+    <%- include('partials/nav') %>
+
+    <div class="container mt-4">
+        <h1>Track Attendance</h1>
+        <form id="trackOptionsForm">
+            <h3>Select Tracking Option</h3>
+            <div class="form-group">
+                <label for="trackingType">Choose Tracking Type:</label>
+                <select id="trackingType" class="form-control" onchange="toggleTrackingOptions()">
+                    <option value="">Select an option</option>
+                    <option value="individual">Track Individual Student</option>
+                    <option value="all">Track All Students</option>
+                </select>
+            </div>
+        </form>
+
+        <div id="individualTracking" style="display: none;">
+            <h3>Track Individual Student</h3>
+            <form id="individualStudentForm">
+                <div class="form-group">
+                    <label for="year">Year:</label>
+                    <select id="year" name="year" class="form-control">
+                        <% for (let i = 2022; i <= 2032; i++) { %>
+                            <option value="<%= i %>"><%= i %></option>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="semester">Semester:</label>
+                    <select id="semester" name="semester" class="form-control">
+                        <option value="Fall">Fall</option>
+                        <option value="Spring">Spring</option>
+                        <option value="Summer">Summer</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="confirmIndividual()">Confirm</button>
+            </form>
+            <div id="studentSelection" style="display: none;">
+                <h4>Select Student:</h4>
+                <select id="studentSelect" class="form-control" onchange="fetchStudentInfo(this.value)">
+                    <option value="">Choose a student</option>
+                    <!-- Populate with student options -->
+                </select>
+                <div id="studentInfo" style="margin-top: 20px;"></div>
+                <div id="attendanceMonth" style="display: none;">
+                    <h5>Select Month:</h5>
+                    <select id="attendanceMonthSelect" class="form-control">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary" onclick="trackIndividualAttendance()">Track Attendance</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="allTracking" style="display: none;">
+            <h3>Track All Students' Attendance</h3>
+            <form id="allStudentsForm">
+                <div class="form-group">
+                    <label for="yearAll">Year:</label>
+                    <select id="yearAll" name="year" class="form-control">
+                        <% for (let i = 2022; i <= 2032; i++) { %>
+                            <option value="<%= i %>"><%= i %></option>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="semesterAll">Semester:</label>
+                    <select id="semesterAll" name="semester" class="form-control">
+                        <option value="Fall">Fall</option>
+                        <option value="Spring">Spring</option>
+                        <option value="Summer">Summer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceDate">Select Day:</label>
+                    <input type="date" id="attendanceDate" name="date" class="form-control">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="trackAllStudents()">Track Attendance for All Students</button>
+            </form>
+        </div>
+
+        <div id="attendanceResults" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function toggleTrackingOptions() {
+            const trackingType = document.getElementById('trackingType').value;
+            document.getElementById('individualTracking').style.display = trackingType === 'individual' ? 'block' : 'none';
+            document.getElementById('allTracking').style.display = trackingType === 'all' ? 'block' : 'none';
+        }
+
+        function confirmIndividual() {
+            const year = document.getElementById('year').value;
+            const semester = document.getElementById('semester').value;
+
+            // Fetch students enrolled in the selected year and semester
+            fetch(`/get-students?year=${year}&semester=${semester}`)
+                .then(response => response.json())
+                .then(data => {
+                    const studentSelect = document.getElementById('studentSelect');
+                    studentSelect.innerHTML = '<option value="">Choose a student</option>';
+                    data.forEach(student => {
+                        studentSelect.innerHTML += `<option value="${student.id}">${student.firstName} ${student.lastName} - ${student.phone}</option>`;
+                    });
+                    document.getElementById('studentSelection').style.display = 'block';
+                });
+        }
+
+        function fetchStudentInfo(studentId) {
+            if (!studentId) {
+                document.getElementById('studentInfo').innerHTML = '';
+                return;
+            }
+
+            fetch(`/get-student-info?id=${studentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const infoDiv = document.getElementById('studentInfo');
+                    infoDiv.innerHTML = `<h5>Student Info:</h5>
+                                         <p>Name: ${data.firstName} ${data.lastName}</p>
+                                         <p>Phone: ${data.phone}</p>`;
+                    document.getElementById('attendanceMonth').style.display = 'block';
+                });
+        }
+
+        function trackIndividualAttendance() {
+            const studentId = document.getElementById('studentSelect').value;
+            const month = document.getElementById('attendanceMonthSelect').value;
+
+            // Fetch attendance for the selected student and month
+            fetch(`/get-attendance?studentId=${studentId}&month=${month}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('attendanceResults');
+                    resultsDiv.innerHTML = `<h5>Attendance for ${month}:</h5>`;
+                    data.forEach(attendance => {
+                        resultsDiv.innerHTML += `<p>${attendance.date}: ${attendance.status}</p>`;
+                    });
+                });
+        }
+
+        function trackAllStudents() {
+            const year = document.getElementById('yearAll').value;
+            const semester = document.getElementById('semesterAll').value;
+            const date = document.getElementById('attendanceDate').value;
+
+            // Fetch attendance for all students in the selected year and semester on the selected date
+            fetch(`/get-all-attendance?year=${year}&semester=${semester}&date=${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('attendanceResults');
+                    resultsDiv.innerHTML = '<h5>Attendance Status:</h5>';
+                    data.forEach(student => {
+                        resultsDiv.innerHTML += `<p>${student.name} - ${student.phone}: ${student.attended ? 'Attended' : 'Not Attended'}</p>`;
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
