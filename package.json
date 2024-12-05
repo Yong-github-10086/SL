@@ -1,0 +1,22 @@
+{
+  "name": "student-management-app",
+  "version": "1.0.0",
+  "description": "A simple student management web app using Node.js, Express, and EJS",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.9",
+    "express": "^4.21.0",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.11.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
